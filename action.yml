@@ -87,6 +87,10 @@ inputs:
     description: Enable trace capture and artifact upload
     required: false
     default: "true"
+  case:
+    description: Case identifier embedded in trace artifact filenames (use the matrix dimension for matrix runs)
+    required: false
+    default: "default"
   wiki:
     description: Enable wiki checkout and sync
     required: false
@@ -170,3 +174,4 @@ runs:
         agent-cwd: ${{ inputs.agent-cwd }}
         timeout-minutes: ${{ inputs.timeout-minutes }}
         trace: ${{ inputs.trace }}
+        case: ${{ inputs.case }}
