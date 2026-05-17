@@ -144,7 +144,7 @@ runs:
 
     - name: Push wiki changes
       if: inputs.wiki == 'true'
-      uses: ./post-run
+      uses: forwardimpact/kata-agent/post-run@v1
       with:
         command: just wiki-push
 
