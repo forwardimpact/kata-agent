@@ -19,7 +19,7 @@ inputs:
     default: "kata-agent-team"
   # --- Agent configuration ---
   mode:
-    description: Execution mode (run, supervise, facilitate)
+    description: Execution mode (run, supervise, facilitate, discuss)
     required: false
     default: "run"
   task-text:
@@ -31,25 +31,18 @@ inputs:
   agent-profile:
     description: Agent profile name (run and supervise modes)
     required: false
-  facilitator-profile:
-    description: Facilitator profile name (facilitate mode)
+  lead-profile:
+    description: Lead role profile name (supervisor / facilitator / chair) — used by supervise, facilitate, and discuss modes
     required: false
   agent-profiles:
-    description: Comma-separated agent profile names (facilitate mode)
-    required: false
-  supervisor-profile:
-    description: Supervisor agent profile name (supervise mode)
+    description: Comma-separated agent profile names (facilitate and discuss modes)
     required: false
   agent-model:
     description: Claude model for agents (all modes)
     required: false
     default: "claude-opus-4-7[1m]"
-  supervisor-model:
-    description: Claude model for the supervisor (supervise mode)
-    required: false
-    default: "claude-opus-4-7[1m]"
-  facilitator-model:
-    description: Claude model for the facilitator (facilitate mode)
+  lead-model:
+    description: Claude model for the lead role (supervise / facilitate / discuss modes)
     required: false
     default: "claude-opus-4-7[1m]"
   max-turns:
@@ -66,6 +59,13 @@ inputs:
   task-amend:
     description: Additional text appended to the task prompt for steering
     required: false
+  # --- Discussion (discuss mode) ---
+  discussion-id:
+    description: Stable id for the threaded discussion (discuss mode); carried through traces for linking and used by callers to resume a suspended run
+    required: false
+  resume-context:
+    description: JSON-serialized prior state for a resumed discuss run (discuss mode)
+    required: false
   # --- Optional overrides ---
   cwd:
     description: Agent working directory (run mode)
@@ -76,7 +76,7 @@ inputs:
     required: false
     default: "."
   agent-cwd:
-    description: Agent working directory (supervise and facilitate modes)
+    description: Agent working directory (supervise, facilitate, and discuss modes)
     required: false
     default: "."
   timeout-minutes:
@@ -159,12 +159,10 @@ runs:
         task-text: ${{ inputs.task-text }}
         task-file: ${{ inputs.task-file }}
         agent-profile: ${{ inputs.agent-profile }}
-        facilitator-profile: ${{ inputs.facilitator-profile }}
+        lead-profile: ${{ inputs.lead-profile }}
         agent-profiles: ${{ inputs.agent-profiles }}
-        supervisor-profile: ${{ inputs.supervisor-profile }}
         agent-model: ${{ inputs.agent-model }}
-        supervisor-model: ${{ inputs.supervisor-model }}
-        facilitator-model: ${{ inputs.facilitator-model }}
+        lead-model: ${{ inputs.lead-model }}
         max-turns: ${{ inputs.max-turns }}
         allowed-tools: ${{ inputs.allowed-tools }}
         supervisor-allowed-tools: ${{ inputs.supervisor-allowed-tools }}
@@ -175,3 +173,5 @@ runs:
         timeout-minutes: ${{ inputs.timeout-minutes }}
         trace: ${{ inputs.trace }}
         case: ${{ inputs.case }}
+        discussion-id: ${{ inputs.discussion-id }}
+        resume-context: ${{ inputs.resume-context }}

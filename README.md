@@ -57,18 +57,45 @@ jobs:
 
 ### Agent Configuration
 
-| Input                 | Required | Default               | Description                         |
-| --------------------- | -------- | --------------------- | ----------------------------------- |
-| `mode`                | No       | `run`                 | `run`, `supervise`, or `facilitate` |
-| `task-text`           | Yes\*    | —                     | Inline task text                    |
-| `task-file`           | Yes\*    | —                     | Path to task file                   |
-| `agent-profile`       | No       | —                     | Agent profile (run/supervise)       |
-| `facilitator-profile` | No       | —                     | Facilitator profile (facilitate)    |
-| `agent-profiles`      | No       | —                     | Comma-separated agents (facilitate) |
-| `model`               | No       | `claude-opus-4-7[1m]` | Claude model                        |
-| `max-turns`           | No       | `200`                 | Max turns (0 = unlimited)           |
-| `allowed-tools`       | No       | `Bash,Read,...`       | Comma-separated tool list           |
-| `task-amend`          | No       | —                     | Text appended to the task           |
+| Input                      | Required | Default               | Description                                                            |
+| -------------------------- | -------- | --------------------- | ---------------------------------------------------------------------- |
+| `mode`                     | No       | `run`                 | `run`, `supervise`, `facilitate`, or `discuss`                         |
+| `task-text`                | Yes\*    | —                     | Inline task text                                                       |
+| `task-file`                | Yes\*    | —                     | Path to task file                                                      |
+| `agent-profile`            | No       | —                     | Agent profile (run / supervise modes)                                  |
+| `lead-profile`             | No       | —                     | Lead role profile (supervise / facilitate / discuss modes)             |
+| `agent-profiles`           | No       | —                     | Comma-separated participant profiles (facilitate / discuss modes)      |
+| `agent-model`              | No       | `claude-opus-4-7[1m]` | Claude model for agents                                                |
+| `lead-model`               | No       | `claude-opus-4-7[1m]` | Claude model for the lead role (supervise / facilitate / discuss)      |
+| `max-turns`                | No       | `200`                 | Max turns (0 = unlimited)                                              |
+| `allowed-tools`            | No       | `Bash,Read,...`       | Comma-separated tool list                                              |
+| `supervisor-allowed-tools` | No       | —                     | Comma-separated tool list for the supervisor (supervise mode)          |
+| `task-amend`               | No       | —                     | Text appended to the task                                              |
+
+### Lead role (`supervisor` / `facilitator` / `chair`)
+
+The lead's profile and model are controlled by a single pair of inputs across
+all three multi-agent modes:
+
+- `supervise` mode runs a supervisor + agent relay; the lead is the supervisor.
+- `facilitate` mode runs a facilitator + N participants; the lead is the
+  facilitator.
+- `discuss` mode runs a chair + N participants over a suspendable bridge; the
+  lead is the chair.
+
+Set `lead-profile` to choose the lead's profile and `lead-model` to override
+the lead's model.
+
+### Discuss mode
+
+`mode: discuss` runs an asynchronous, suspendable discussion. Use
+`discussion-id` to correlate traces across resumed runs and `resume-context`
+to restore prior state when the caller resumes a suspended discussion.
+
+| Input            | Required | Default | Description                                              |
+| ---------------- | -------- | ------- | -------------------------------------------------------- |
+| `discussion-id`  | No       | —       | Stable id for the threaded discussion; enables resume    |
+| `resume-context` | No       | —       | JSON-serialized prior state for a resumed discuss run    |
 
 ### Optional Overrides
 
@@ -76,6 +103,10 @@ jobs:
 | ----------------- | -------- | ------- | ----------------------------- |
 | `timeout-minutes` | No       | `45`    | Max runtime in minutes        |
 | `trace`           | No       | `true`  | Enable trace capture          |
+| `case`            | No       | `default` | Case id for trace artifacts |
 | `wiki`            | No       | `true`  | Enable wiki checkout and sync |
+| `cwd`             | No       | `.`     | Agent working dir (run mode)  |
+| `supervisor-cwd`  | No       | `.`     | Supervisor working dir (supervise mode) |
+| `agent-cwd`       | No       | `.`     | Agent working dir (supervise / facilitate / discuss modes) |
 
 \*Exactly one of `task-text` or `task-file` is required.
