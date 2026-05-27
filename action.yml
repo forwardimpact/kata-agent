@@ -113,10 +113,13 @@ runs:
 
     # fit-bootstrap handles Bun + cached deps + cached workspace +
     # wiki sync + ./scripts/bootstrap.sh. The `token:` input gates wiki
-    # checkout / post-run wiki push — leave it empty to skip wiki sync.
+    # checkout — leave it empty to skip wiki sync. `wiki-push: false`
+    # suppresses fit-bootstrap's post-run push: the agent run can exceed the
+    # one-hour App-token lifetime, so we mint a fresh token and push below.
     - uses: forwardimpact/fit-bootstrap@v1
       with:
         token: ${{ inputs.wiki == 'true' && steps.ci-app.outputs.token || '' }}
+        wiki-push: "false"
         app-slug: ${{ inputs.app-slug }}
         app-id: ${{ inputs.app-id }}
 
@@ -147,3 +150,28 @@ runs:
         case: ${{ inputs.case }}
         discussion-id: ${{ inputs.discussion-id }}
         resume-context: ${{ inputs.resume-context }}
+
+    # The agent run can exceed the one-hour lifetime of the token minted at
+    # job start, so that token is often dead by cleanup. Mint a fresh one
+    # and push the wiki here (runs even when the agent step failed). The
+    # `always()` guard keeps memory durable on timeouts and errors alike.
+    - name: Refresh installation token for wiki push
+      id: wiki-app
+      if: always() && inputs.wiki == 'true'
+      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.app-private-key }}
+
+    - name: Push wiki changes
+      if: always() && inputs.wiki == 'true' && steps.wiki-app.outputs.token != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ steps.wiki-app.outputs.token }}
+      run: |
+        set -euo pipefail
+        # actions/checkout stored the now-stale start-of-job token as an
+        # extraheader on the wiki repo; drop it so fit-wiki's credential
+        # helper authenticates with the freshly minted GH_TOKEN instead.
+        git -C wiki config --unset-all 'http.https://github.com/.extraheader' || true
+        just wiki-push
