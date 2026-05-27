@@ -151,10 +151,10 @@ runs:
         discussion-id: ${{ inputs.discussion-id }}
         resume-context: ${{ inputs.resume-context }}
 
-    # The agent run can exceed the one-hour lifetime of the token minted at
-    # job start, so that token is often dead by cleanup. Mint a fresh one
-    # and push the wiki here (runs even when the agent step failed). The
-    # `always()` guard keeps memory durable on timeouts and errors alike.
+    # The agent run can outlast the one-hour App-token lifetime, so the
+    # token minted at job start is often dead by cleanup. Mint a fresh one
+    # and push the wiki here under always() — keeping memory durable
+    # whether the agent step succeeded, failed, or timed out.
     - name: Refresh installation token for wiki push
       id: wiki-app
       if: always() && inputs.wiki == 'true'
@@ -164,14 +164,8 @@ runs:
         private-key: ${{ inputs.app-private-key }}
 
     - name: Push wiki changes
-      if: always() && inputs.wiki == 'true' && steps.wiki-app.outputs.token != ''
+      if: always() && inputs.wiki == 'true'
       shell: bash
       env:
         GH_TOKEN: ${{ steps.wiki-app.outputs.token }}
-      run: |
-        set -euo pipefail
-        # actions/checkout stored the now-stale start-of-job token as an
-        # extraheader on the wiki repo; drop it so fit-wiki's credential
-        # helper authenticates with the freshly minted GH_TOKEN instead.
-        git -C wiki config --unset-all 'http.https://github.com/.extraheader' || true
-        just wiki-push
+      run: just wiki-push
