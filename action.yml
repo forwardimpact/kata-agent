@@ -112,14 +112,12 @@ runs:
         token: ${{ steps.ci-app.outputs.token }}
 
     # fit-bootstrap handles Bun + cached deps + cached workspace +
-    # wiki sync + ./scripts/bootstrap.sh. The `token:` input gates wiki
-    # checkout — leave it empty to skip wiki sync. `wiki-push: false`
-    # suppresses fit-bootstrap's post-run push: the agent run can exceed the
-    # one-hour App-token lifetime, so we mint a fresh token and push below.
+    # ./scripts/bootstrap.sh. The `token:` input gates wiki checkout —
+    # leave it empty to skip wiki sync. The wiki is pushed back after the
+    # agent run via forwardimpact/fit-wiki below.
     - uses: forwardimpact/fit-bootstrap@v1
       with:
         token: ${{ inputs.wiki == 'true' && steps.ci-app.outputs.token || '' }}
-        wiki-push: "false"
         app-slug: ${{ inputs.app-slug }}
         app-id: ${{ inputs.app-id }}
 
@@ -151,21 +149,14 @@ runs:
         discussion-id: ${{ inputs.discussion-id }}
         resume-context: ${{ inputs.resume-context }}
 
-    # The agent run can outlast the one-hour App-token lifetime, so the
-    # token minted at job start is often dead by cleanup. Mint a fresh one
-    # and push the wiki here under always() — keeping memory durable
-    # whether the agent step succeeded, failed, or timed out.
-    - name: Refresh installation token for wiki push
-      id: wiki-app
-      if: always() && inputs.wiki == 'true'
-      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
-      with:
-        app-id: ${{ inputs.app-id }}
-        private-key: ${{ inputs.app-private-key }}
-
+    # Push agent memory back. fit-wiki mints a fresh token (the one minted
+    # at job start expires after an hour, so a long agent run would leave a
+    # cleanup-time push unauthenticated) and runs under always() so memory
+    # is durable whether the agent step succeeded, failed, or timed out.
     - name: Push wiki changes
       if: always() && inputs.wiki == 'true'
-      shell: bash
-      env:
-        GH_TOKEN: ${{ steps.wiki-app.outputs.token }}
-      run: just wiki-push
+      uses: forwardimpact/fit-wiki@v1
+      with:
+        command: push
+        app-id: ${{ inputs.app-id }}
+        app-private-key: ${{ inputs.app-private-key }}
