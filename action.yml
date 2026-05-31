@@ -127,6 +127,11 @@ runs:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
         GH_TOKEN: ${{ steps.ci-app.outputs.token }}
         CLAUDE_CODE_USE_BEDROCK: "0"
+        # The agent runs in bypass-permissions mode, which Claude Code refuses
+        # under uid 0 unless the process is marked sandboxed. fit-eval@v1 sets
+        # this on its own run step; set it here too so the requirement is
+        # explicit at the workflow level. Harmless on non-root runners.
+        IS_SANDBOX: "1"
       with:
         mode: ${{ inputs.mode }}
         task-text: ${{ inputs.task-text }}
