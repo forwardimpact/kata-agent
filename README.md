@@ -1,8 +1,10 @@
 # Kata Agent
 
 Run a complete Kata agent workflow in a single step. Handles GitHub App
-authentication, repository checkout, environment bootstrap, and agent execution
-via [fit-eval](https://www.npmjs.com/package/@forwardimpact/libeval).
+authentication, repository checkout, environment bootstrap, agent execution
+via [fit-eval](https://www.npmjs.com/package/@forwardimpact/libeval), and
+wiki-memory sync — the storyboard is refreshed from live issue/CSV state both
+before and after the run, then pushed back.
 
 ## Usage
 
