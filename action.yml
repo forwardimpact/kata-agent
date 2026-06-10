@@ -38,13 +38,13 @@ inputs:
     description: Comma-separated agent profile names (facilitate and discuss modes)
     required: false
   agent-model:
-    description: Claude model for agents (all modes)
+    description: Claude model for agents (all modes); empty uses the fit-eval CLI default
     required: false
-    default: "claude-opus-4-7[1m]"
+    default: ""
   lead-model:
-    description: Claude model for the lead role (supervise / facilitate / discuss modes)
+    description: Claude model for the lead role (supervise / facilitate / discuss modes); empty uses the fit-eval CLI default
     required: false
-    default: "claude-opus-4-7[1m]"
+    default: ""
   max-turns:
     description: Maximum turns (0 = unlimited)
     required: false
@@ -134,7 +134,7 @@ runs:
         app-private-key: ${{ inputs.app-private-key }}
 
     - name: Assess and Act
-      uses: forwardimpact/fit-eval@v1
+      uses: forwardimpact/fit-eval@c616487598df0840ce237ee375ad7a9837213714 # v1.0.0
       env:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
         GH_TOKEN: ${{ steps.ci-app.outputs.token }}
