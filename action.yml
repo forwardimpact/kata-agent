@@ -96,6 +96,29 @@ inputs:
     required: false
     default: "true"
 
+outputs:
+  trace-file:
+    description: >
+      Absolute path of the raw NDJSON trace file from the agent run
+      (empty when `trace` is disabled). Wraps each
+      agent/supervisor/facilitator/chair/orchestrator event in
+      `{source, seq, event}` envelopes. Read it directly to post-process the
+      run — e.g. `fit-trace cost <file>` to sum spend across every
+      participant. Passed through from the internal `fit-eval` action.
+    value: ${{ steps.assess.outputs.trace-file }}
+  trace-dir:
+    description: >
+      Absolute path of the temp directory holding all trace files for this
+      run (empty when `trace` is disabled). Use it to read the raw or split
+      trace files without globbing the runner's temp space. Passed through
+      from the internal `fit-eval` action.
+    value: ${{ steps.assess.outputs.trace-dir }}
+  case:
+    description: >
+      Effective case identifier embedded in the trace filenames. Passed
+      through from the internal `fit-eval` action.
+    value: ${{ steps.assess.outputs.case }}
+
 runs:
   using: composite
   steps:
@@ -134,6 +157,7 @@ runs:
         app-private-key: ${{ inputs.app-private-key }}
 
     - name: Assess and Act
+      id: assess
       uses: forwardimpact/fit-eval@c616487598df0840ce237ee375ad7a9837213714 # v1.0.0
       env:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
