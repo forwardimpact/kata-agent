@@ -1,6 +1,6 @@
 name: Kata Agent
 description: >
-  Run a Kata agent workflow — generates an installation token, checks out the repository, bootstraps the environment, and executes the agent via fit-eval.
+  Run a Kata agent workflow — generates an installation token, checks out the repository, bootstraps the environment, and executes the agent via fit-harness.
 
 inputs:
   # --- Authentication ---
@@ -38,11 +38,11 @@ inputs:
     description: Comma-separated agent profile names (facilitate and discuss modes)
     required: false
   agent-model:
-    description: Claude model for agents (all modes); empty uses the fit-eval CLI default
+    description: Claude model for agents (all modes); empty uses the fit-harness CLI default
     required: false
     default: ""
   lead-model:
-    description: Claude model for the lead role (supervise / facilitate / discuss modes); empty uses the fit-eval CLI default
+    description: Claude model for the lead role (supervise / facilitate / discuss modes); empty uses the fit-harness CLI default
     required: false
     default: ""
   max-turns:
@@ -104,19 +104,19 @@ outputs:
       agent/supervisor/facilitator/chair/orchestrator event in
       `{source, seq, event}` envelopes. Read it directly to post-process the
       run — e.g. `fit-trace cost <file>` to sum spend across every
-      participant. Passed through from the internal `fit-eval` action.
+      participant. Passed through from the internal `fit-harness` action.
     value: ${{ steps.assess.outputs.trace-file }}
   trace-dir:
     description: >
       Absolute path of the temp directory holding all trace files for this
       run (empty when `trace` is disabled). Use it to read the raw or split
       trace files without globbing the runner's temp space. Passed through
-      from the internal `fit-eval` action.
+      from the internal `fit-harness` action.
     value: ${{ steps.assess.outputs.trace-dir }}
   case:
     description: >
       Effective case identifier embedded in the trace filenames. Passed
-      through from the internal `fit-eval` action.
+      through from the internal `fit-harness` action.
     value: ${{ steps.assess.outputs.case }}
 
 runs:
@@ -158,13 +158,13 @@ runs:
 
     - name: Assess and Act
       id: assess
-      uses: forwardimpact/fit-eval@c616487598df0840ce237ee375ad7a9837213714 # v1.0.0
+      uses: forwardimpact/fit-harness@6af713fe23701ed1001631c8d3118075561cc41e # v1.0.1
       env:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
         GH_TOKEN: ${{ steps.ci-app.outputs.token }}
         CLAUDE_CODE_USE_BEDROCK: "0"
         # The agent runs in bypass-permissions mode, which Claude Code refuses
-        # under uid 0 unless the process is marked sandboxed. fit-eval@v1 sets
+        # under uid 0 unless the process is marked sandboxed. fit-harness@v1 sets
         # this on its own run step; set it here too so the requirement is
         # explicit at the workflow level. Harmless on non-root runners.
         IS_SANDBOX: "1"
