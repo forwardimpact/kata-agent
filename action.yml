@@ -138,11 +138,15 @@ runs:
     # ./scripts/bootstrap.sh. The `token:` input gates wiki checkout —
     # leave it empty to skip wiki sync. The wiki is pushed back after the
     # agent run via forwardimpact/fit-wiki below.
-    - uses: forwardimpact/fit-bootstrap@v1
+    - uses: forwardimpact/fit-bootstrap@27438d9d934d1ca9c68aa131026591134dd96ceb # v1.0.2
       with:
         token: ${{ inputs.wiki == 'true' && steps.ci-app.outputs.token || '' }}
         app-slug: ${{ inputs.app-slug }}
         app-id: ${{ inputs.app-id }}
+        # Install the pre-compiled CLIs the run uses onto PATH; fit-wiki only
+        # when wiki sync is enabled. The fit-harness/fit-wiki steps below
+        # resolve these binaries before any npx path.
+        clis: ${{ inputs.wiki == 'true' && 'fit-wiki fit-harness fit-trace' || 'fit-harness fit-trace' }}
 
     # Render the storyboard from current issue + CSV state before the agent
     # reads it, so the facilitator and participants see an up-to-date Current
